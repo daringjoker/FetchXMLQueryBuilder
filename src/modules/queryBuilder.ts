@@ -47,6 +47,9 @@ interface InternalRepresentation {
   orderRules: OrderRule[];
 }
 
+/**
+ * Builds a fetchXML query string progressively.
+ */
 export class FetchXML {
   protected internals: InternalRepresentation = {
     name: '',
@@ -57,6 +60,17 @@ export class FetchXML {
   };
 
   private xml = create().ele('fetch', { version: '1.0' });
+
+  /**
+   * sets name of the table against which the query is to be executed
+   *
+   * @param tableEntity  can be a simple string or a object in for { alias : tableName}
+   * used to describe both alias and name of the table against which the query is to be executed
+   *
+   * @example  q.table("userRecords") // sets table name to 'userRecords'
+   *  q.table({ur:"userRecords"}) //sets table name to 'userRecords' and alias to 'ur'
+   *
+   */
 
   table(tableEntity: string | { [key: string]: string }) {
     if (typeof tableEntity === 'string') {
@@ -73,6 +87,16 @@ export class FetchXML {
     return this;
   }
 
+  /**
+   *  sets the fields to be fetched from the selected table
+   * @param columnNames can be any number of strings or aliasObjects used to set the fields which should be present in the fetched data
+   *
+   * @example  q.select("first_name","user_email") //selects the fields 'first_name' and 'user_email'
+   *           q.select({name:"first_name",email:"user_email"}) // selects field first_name and aliases it as name and 'user_email' as email
+   *           q.select("*") // select all columns from the selected table
+   *           q.select() // same as q.select('*')
+   *           q.select({alias1:name1},{alias2:name2}) // there can be multiple alias Objects if names colide name defined last will be used.
+   */
   select(...columnNames: (string | AliasObject)[]) {
     if (!columnNames.length || (columnNames.length === 1 && columnNames[0] === '*')) {
       this.internals.columns = '*';
@@ -98,6 +122,10 @@ export class FetchXML {
     return this;
   }
 
+  /**
+   * set the alias name for the table being selected
+   * @param alias alias name for the table being selected
+   */
   as(alias: string) {
     this.internals.alias = alias;
 
@@ -155,10 +183,14 @@ export class FetchXML {
 
   innerJoin(joinObj: string | ((param: FetchXML) => void) | AliasObject, from: string, to: string) {
     this.joinEntity(joinObj, from, to, 'inner');
+
+    return this;
   }
 
   join(joinObj: string | ((param: FetchXML) => void) | AliasObject, from: string, to: string) {
     this.joinEntity(joinObj, from, to, 'inner');
+
+    return this;
   }
 
   where(attribute: string, value: string | number) {
